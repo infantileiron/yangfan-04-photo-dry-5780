@@ -1,0 +1,19 @@
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;600;700&family=Playfair+Display:wght@400;600;700&display=swap");
+:root {
+  color-scheme: light;
+  --font-display: "Playfair Display";
+  --font-body: "Noto Sans SC";
+  --radius: 0;
+  --gutter: clamp(1.05rem, 3vw, 3.5rem);
+  --canvas: oklch(96% 0.018 32);
+  --paper: oklch(98% 0.009 32);
+  --side: oklch(92% 0.029 32);
+  --ink: oklch(25% 0.037 32);
+  --muted: oklch(43% 0.043 32);
+  --line: oklch(81% 0.04 32);
+  --accent: oklch(44% 0.19 32);
+  --accent-ink: oklch(37% 0.19 32);
+  --on-accent: oklch(98% 0.011 32);
+  --table-alt: oklch(96% 0.012 32);
+  --error: oklch(42% 0.15 25);
+}
