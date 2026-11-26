@@ -8,4 +8,6 @@ export const auditActions = {
   run_failed: '计算失败',
   review_approve: '签发交接',
   review_hold: '暂缓交接',
+  model_validation_created: '留验比较',
+  model_adopted: '换用模型',
 };

@@ -23,3 +23,9 @@ def reviewer(account=Depends(current_account)):
     if account.role != Role.REVIEWER.value:
         raise HTTPException(403, "仅复核员可以签审交接。")
     return account
+
+
+def model_operator(account=Depends(current_account)):
+    if account.role not in (Role.ANALYST.value, Role.REVIEWER.value):
+        raise HTTPException(403, "仅分析员或复核员可以发起留验比较与模型换用。")
+    return account

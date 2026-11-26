@@ -2,7 +2,7 @@
 
 from collections import defaultdict
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 
 import numpy as np
 
@@ -14,6 +14,8 @@ AIR_INTERACTION = "湿度×风速"
 INTERACTION_SUBSETS = ((), (INK_INTERACTION,), (AIR_INTERACTION,), (INK_INTERACTION, AIR_INTERACTION))
 HISTORY = "历史试纸"
 CANDIDATE = "待试机"
+HOLDOUT = "留验试纸"
+HOLDOUT_ROLES = (HOLDOUT, "留验", "验证试纸", "holdout")
 CYCLE_LIMIT_S = 35
 
 
@@ -26,9 +28,21 @@ class Trial:
     measured_s: float | None
 
 
-def parse_trials(rows: list[dict]) -> tuple[dict[date, list[Trial]], list[Trial]]:
+def parse_bundle(
+    rows: list[dict], holdout_dates: set[str] | list[str] | tuple[str, ...] | None = None,
+    require_candidates: bool = True,
+) -> tuple[dict[date, list[Trial]], list[Trial], list[Trial]]:
+    excluded_dates = set()
+    for value in holdout_dates or ():
+        if isinstance(value, datetime):
+            excluded_dates.add(value.date().isoformat())
+        elif isinstance(value, date):
+            excluded_dates.add(value.isoformat())
+        else:
+            excluded_dates.add(date.fromisoformat(str(value)[:10]).isoformat())
     history = defaultdict(list)
     candidates = []
+    holdout = []
     for row in rows:
         sample_id = row["sample_id"]
         try:
@@ -40,6 +54,12 @@ def parse_trials(rows: list[dict]) -> tuple[dict[date, list[Trial]], list[Trial]
 
         role = row["sample_role"]
         measured_s = row.get("dry_seconds")
+        is_holdout_date = day.isoformat() in excluded_dates
+        if role in HOLDOUT_ROLES or is_holdout_date:
+            if measured_s is None:
+                raise ValueError(f"{sample_id} 的留验试纸必须包含实测干燥秒数。")
+            holdout.append(Trial(sample_id, HOLDOUT, day, tuple(float(row[key]) for key in FEATURES), measured_s))
+            continue
         if role == HISTORY and measured_s is None:
             raise ValueError(f"{sample_id} 缺少历史干燥秒数。")
         if role == CANDIDATE and measured_s is not None:
@@ -50,12 +70,55 @@ def parse_trials(rows: list[dict]) -> tuple[dict[date, list[Trial]], list[Trial]
         elif role == CANDIDATE:
             candidates.append(trial)
         else:
-            raise ValueError(f"{sample_id} 的试纸用途应为历史试纸或待试机。")
+            raise ValueError(f"{sample_id} 的试纸用途应为历史试纸、待试机或留验试纸。")
 
-    if len(history) < 10 or not candidates:
-        raise ValueError("至少需要 10 个不同日期的历史试纸，以及 1 张待试机试纸。")
-    if min(trial.day for trial in candidates) <= max(history):
+    # A holdout date is excluded as a whole date group even if another row on
+    # that date was labelled as history.
+    excluded_dates.update(trial.day.isoformat() for trial in holdout)
+    if excluded_dates:
+        history = defaultdict(list, {
+            day: trials for day, trials in history.items()
+            if day.isoformat() not in excluded_dates
+        })
+
+    if len(history) < 10 or (require_candidates and not candidates):
+        if require_candidates:
+            raise ValueError("至少需要 10 个不同日期的历史试纸，以及 1 张待试机试纸。")
+        raise ValueError("至少需要 10 个不同日期的历史试纸。")
+    if candidates and min(trial.day for trial in candidates) <= max(history):
         raise ValueError("待试机日期必须晚于所有历史试纸日期。")
+    return history, candidates, holdout
+
+
+def parse_holdout_rows(rows: list[dict]) -> list[Trial]:
+    """Parse a separately exported holdout file.
+
+    The endpoint designation, not the role label, makes these rows holdout.
+    This accepts older exports whose rows are still labelled 历史试纸.
+    """
+    holdout = []
+    for row in rows:
+        sample_id = row["sample_id"]
+        try:
+            day = date.fromisoformat(row["trial_date"])
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"{sample_id} 的留验日期应使用 YYYY-MM-DD。") from exc
+        if row["trial_date"] != day.isoformat():
+            raise ValueError(f"{sample_id} 的留验日期应使用 YYYY-MM-DD。")
+        measured_s = row.get("dry_seconds")
+        if measured_s is None:
+            raise ValueError(f"{sample_id} 的留验试纸必须包含实测干燥秒数。")
+        holdout.append(Trial(
+            sample_id, HOLDOUT, day,
+            tuple(float(row[key]) for key in FEATURES), measured_s,
+        ))
+    if not holdout:
+        raise ValueError("留验数据版本至少需要一张带实测秒数的留验试纸。")
+    return holdout
+
+
+def parse_trials(rows: list[dict]) -> tuple[dict[date, list[Trial]], list[Trial]]:
+    history, candidates, _ = parse_bundle(rows, require_candidates=True)
     return history, candidates
 
 

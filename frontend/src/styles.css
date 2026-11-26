@@ -223,3 +223,12 @@ tbody tr:hover { background: var(--side); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+.risk-ok { color: #176b3a; font-weight: 700; }
+.risk-high { color: #a3331b; font-weight: 700; }
+.gate-banner { border: 1px solid var(--line); border-inline-start-width: 6px; border-radius: 14px; padding: 1rem 1.1rem; margin-bottom: 1rem; background: var(--paper); }
+.gate-banner h2 { margin: 0 0 .45rem; }
+.gate-ok { border-inline-start-color: #176b3a; background: color-mix(in srgb, #176b3a 8%, var(--paper)); }
+.gate-block { border-inline-start-color: #a3331b; background: color-mix(in srgb, #a3331b 8%, var(--paper)); }
+.gate-banner .primary { margin-top: .5rem; }
+.model-snapshot { font-size: .92rem; color: var(--muted); }

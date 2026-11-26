@@ -11,7 +11,7 @@ from src.config.settings import SEED_DEMO, Session, engine, redis
 from src.middlewares.headers import add_headers
 from src.middlewares.throttle import login_limit
 from src.models.dataset import Dataset
-from src.routes import auth, workspace
+from src.routes import auth, governance, workspace
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +31,7 @@ app = FastAPI(title=PROFILE["title"], lifespan=lifespan)
 app.middleware("http")(login_limit)
 app.middleware("http")(add_headers)
 app.include_router(auth.router, prefix="/api")
+app.include_router(governance.router, prefix="/api")
 app.include_router(workspace.router, prefix="/api")
 
 

@@ -1,12 +1,13 @@
 import { session, setSession } from '../stores/session.js';
 
-export async function request(path, { method = 'GET', body, download = false } = {}) {
+export async function request(path, { method = 'GET', body, download = false, headers = {} } = {}) {
   const token = session()?.token;
   let response;
   try {
     response = await fetch('/api' + path, {
       method,
       headers: {
+        ...headers,
         ...(token ? { Authorization: 'Bearer ' + token } : {}),
         ...(body ? { 'Content-Type': 'application/json' } : {}),
       },

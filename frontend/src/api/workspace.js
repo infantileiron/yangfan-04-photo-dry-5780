@@ -12,5 +12,14 @@ export const api = {
   review: (id, data) => request('/runs/' + id + '/review', { method: 'POST', body: data }),
   reviews: () => request('/reviews'),
   audit: () => request('/audit'),
+  modelCenter: () => request('/model-center'),
+  validations: () => request('/validations'),
+  validation: id => request('/validations/' + id),
+  evaluate: data => request('/validations', { method: 'POST', body: data }),
+  adopt: (data, idempotencyKey) => request('/model-adoptions', {
+    method: 'POST',
+    body: { idempotency_key: idempotencyKey, ...data },
+    headers: idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {},
+  }),
   download: path => request(path, { download: true }),
 };

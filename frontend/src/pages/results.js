@@ -33,6 +33,7 @@ export async function resultsPage(profile, account, id) {
   return {
     html: intro + `<div class="board results-board"><aside class="side">
       <h2>本次口径</h2><dl class="meta"><dt>${e(profile.parameter.label)}</dt><dd>${e(run.parameter)}</dd>
+      <dt>下单时模型</dt><dd>${e(run.model_key || 'cross-ridge-v1')}</dd>
       <dt>数据版本</dt><dd><a href="#datasets/${run.dataset_id}">${shortId(run.dataset_id)}</a></dd>
       </dl><p class="muted">${e(profile.downstream)}</p>
       <a class="button" href="#handoff/${run.id}">查看签审</a>

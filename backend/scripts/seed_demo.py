@@ -3,7 +3,7 @@ import json
 from sqlalchemy import func, select
 
 from migrations.bootstrap import migrate
-from src.business.demo import demo_rows
+from src.business.demo import demo_rows, demo_validation_rows
 from src.business.profile import PROFILE
 from src.config.settings import Session, engine
 from src.constants.workflow import Role
@@ -26,10 +26,19 @@ def seed():
                 db.add(Account(email=email, role=role.value, password_hash=hash_password(PASSWORD)))
         db.flush()
         item, created = save_in(db, PROFILE["seed_name"], rows, "seed", audit=False)
+        validation_rows = parse_csv(
+            render_csv(demo_validation_rows(), [column["key"] for column in columns]), columns
+        )
+        validation_item, validation_created = save_in(
+            db, "JG-M52_20261126_留验比较包.csv", validation_rows, "seed", audit=False
+        )
         return {
             "accounts": db.scalar(select(func.count()).select_from(Account)),
             "datasets": db.scalar(select(func.count()).select_from(Dataset)),
             "rows": len(item.rows), "checksum": item.checksum, "created": created,
+            "validation_rows": len(validation_item.rows),
+            "validation_checksum": validation_item.checksum,
+            "validation_created": validation_created,
         }
 
 

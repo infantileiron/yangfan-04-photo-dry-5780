@@ -17,3 +17,21 @@ class Stage(str, Enum):
 class Decision(str, Enum):
     APPROVE = "approve"
     HOLD = "hold"
+
+
+class ModelStatus(str, Enum):
+    ACTIVE = "active"
+    CANDIDATE = "candidate"
+    ARCHIVED = "archived"
+
+
+class ValidationStatus(str, Enum):
+    ELIGIBLE = "eligible"
+    INELIGIBLE = "ineligible"
+    STALE = "stale"
+
+
+class AdoptionStatus(str, Enum):
+    APPLIED = "applied"
+    FAILED = "failed"
+    PENDING = "pending"

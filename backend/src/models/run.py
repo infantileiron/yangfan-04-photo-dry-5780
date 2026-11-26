@@ -13,6 +13,8 @@ class Run(Base):
     dataset_id: Mapped[str] = mapped_column(ForeignKey("datasets.id"), index=True)
     label: Mapped[str] = mapped_column(String(100))
     parameter: Mapped[float]
+    model_key: Mapped[str] = mapped_column(String(64), default="cross-ridge-v1", index=True)
+    model_fingerprint: Mapped[str | None] = mapped_column(String(64), nullable=True)
     actor: Mapped[str] = mapped_column(String(160))
     status: Mapped[str] = mapped_column(String(20), default=Stage.QUEUED.value, index=True)
     result: Mapped[dict | None] = mapped_column(JSON, nullable=True)
@@ -23,3 +25,11 @@ class Run(Base):
     started_at: Mapped[datetime | None]
     finished_at: Mapped[datetime | None]
     created_at: Mapped[datetime] = mapped_column(default=utcnow)
+
+    @property
+    def model_version(self):
+        return self.model_key
+
+    @model_version.setter
+    def model_version(self, value):
+        self.model_key = value

@@ -43,7 +43,7 @@ def claim():
         run.started_at = utcnow()
         run.attempts += 1
         dataset = db.get(Dataset, run.dataset_id)
-        return run.id, run.lease, run.parameter, dataset.rows
+        return run.id, run.lease, run.parameter, dataset.rows, run.model_key
 
 
 def verify_result(result):
@@ -62,12 +62,12 @@ def verify_result(result):
 
 
 def execute(job):
-    run_id, lease, parameter, rows = job
+    run_id, lease, parameter, rows, model_key = job
     artifact = None
     result = None
     error = None
     try:
-        result = verify_result(analyze(rows, parameter))
+        result = verify_result(analyze(rows, parameter, model_key=model_key))
         artifact = f"{run_id}-{lease}.csv"
         path = ARTIFACTS / artifact
         temporary = path.with_suffix(".tmp")
